@@ -1,0 +1,63 @@
+{
+  "name": "llm-stream-string-replace",
+  "version": "0.1.0",
+  "description": "Stream string replacement for LLM interfaces with provider-shape-preserving outputs. Supports Regex and string patterns.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./openai": {
+      "import": "./dist/esm/adapters/openai.js",
+      "require": "./dist/cjs/adapters/openai.js",
+      "types": "./dist/types/adapters/openai.d.ts"
+    },
+    "./anthropic": {
+      "import": "./dist/esm/adapters/anthropic.js",
+      "require": "./dist/cjs/adapters/anthropic.js",
+      "types": "./dist/types/adapters/anthropic.d.ts"
+    },
+    "./vercel": {
+      "import": "./dist/esm/adapters/vercel.js",
+      "require": "./dist/cjs/adapters/vercel.js",
+      "types": "./dist/types/adapters/vercel.d.ts"
+    },
+    "./langchain": {
+      "import": "./dist/esm/adapters/langchain.js",
+      "require": "./dist/cjs/adapters/langchain.js",
+      "types": "./dist/types/adapters/langchain.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "tsc -p tsconfig.esm.json && tsc-alias -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && tsc-alias -p tsconfig.cjs.json",
+    "build:types": "tsc -p tsconfig.types.json && tsc-alias -p tsconfig.types.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "replacestream": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/replacestream": "^4.0.4",
+    "prettier": "^3.5.3",
+    "tsc-alias": "^1.8.10",
+    "typescript": "^5.8.3",
+    "vitest": "^2.1.8"
+  }
+}
