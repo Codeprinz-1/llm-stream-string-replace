@@ -1,9 +1,14 @@
-export function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
+export function isAsyncIterable(
+  value: unknown,
+): value is AsyncIterable<unknown> {
   if (value === null || typeof value !== "object") {
     return false;
   }
 
-  return typeof (value as Record<PropertyKey, unknown>)[Symbol.asyncIterator] === "function";
+  return (
+    typeof (value as Record<PropertyKey, unknown>)[Symbol.asyncIterator] ===
+    "function"
+  );
 }
 
 export function hasMethod(value: unknown, method: string): boolean {
@@ -22,15 +27,20 @@ export function hasProperty(value: unknown, property: string): boolean {
   return property in (value as Record<string, unknown>);
 }
 
-export function assertAsyncIterable(value: unknown, adapterName: string): asserts value is AsyncIterable<unknown> {
+export function assertAsyncIterable(
+  value: unknown,
+  adapterName: string,
+): asserts value is AsyncIterable<unknown> {
   if (!isAsyncIterable(value)) {
-    throw new TypeError(`${adapterName} expected an AsyncIterable-compatible stream surface.`);
+    throw new TypeError(
+      `${adapterName} expected an AsyncIterable-compatible stream surface.`,
+    );
   }
 }
 
 export function makeIteratorProxy<T extends object>(
   source: T,
-  iteratorFactory: () => AsyncIterable<unknown>
+  iteratorFactory: () => AsyncIterable<unknown>,
 ): T {
   return new Proxy(source, {
     get(target, prop, receiver) {
@@ -45,6 +55,6 @@ export function makeIteratorProxy<T extends object>(
       }
 
       return value;
-    }
+    },
   });
 }
