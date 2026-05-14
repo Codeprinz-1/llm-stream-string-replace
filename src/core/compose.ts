@@ -7,12 +7,16 @@ import type {
   TextAccess,
 } from "@/core/types";
 
+function isSingleRule(rules: Rules): rules is Rule {
+  return rules.length === 2 && !Array.isArray(rules[0]);
+}
+
 function toRuleArray(rules: Rules): Rule[] {
-  if (rules.length === 2 && !Array.isArray((rules as unknown[])[0])) {
-    return [rules as Rule];
+  if (isSingleRule(rules)) {
+    return [rules];
   }
 
-  return rules as Rule[];
+  return rules;
 }
 
 async function* applySingleRule<TEvent>(
