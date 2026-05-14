@@ -1,4 +1,5 @@
 import { ChannelReplacer } from "@/core/channel-replacer";
+import { makeIteratorProxy } from "@/adapters/type-guards";
 import type {
   ChannelReplacerOptions,
   Rule,
@@ -69,16 +70,18 @@ async function* applySingleRule<TEvent>(
   }
 }
 
-export function applyRules<TEvent>(
-  source: AsyncIterable<TEvent>,
+export function applyRules<TEvent, TStream extends AsyncIterable<TEvent>>(
+  source: TStream,
   rules: Rules,
   access: TextAccess<TEvent>,
   options?: ChannelReplacerOptions,
-): AsyncIterable<TEvent> {
+): TStream {
   const normalizedRules = toRuleArray(rules);
 
-  return normalizedRules.reduce<AsyncIterable<TEvent>>(
-    (stream, rule) => applySingleRule(stream, rule, access, options),
-    source,
+  return makeIteratorProxy(source, () =>
+    normalizedRules.reduce<AsyncIterable<TEvent>>(
+      (stream, rule) => applySingleRule(stream, rule, access, options),
+      source,
+    ),
   );
 }
