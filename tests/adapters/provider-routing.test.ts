@@ -58,6 +58,46 @@ describe("provider wrappers", () => {
     ).rejects.toThrow("could not detect an Anthropic message stream");
   });
 
+  it("replaceInAnthropicStream keeps indexed blocks separate from flat text_delta lane", async () => {
+    const stream = fromArray([
+      { type: "message_start" },
+      {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text: "he" },
+      },
+      {
+        type: "content_block_delta",
+        index: 1,
+        delta: { type: "text_delta", text: "hello" },
+      },
+      { type: "text_delta", text: "llo" },
+      { type: "content_block_stop", index: 0 },
+      { type: "content_block_stop", index: 1 },
+      { type: "message_stop" },
+    ]);
+
+    const out = await collectAsync(replaceInAnthropicStream(stream, [/hello/g, "hi"]));
+
+    expect(out).toEqual([
+      { type: "message_start" },
+      {
+        type: "content_block_delta",
+        index: 1,
+        delta: { type: "text_delta", text: "hi" },
+      },
+      {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text: "he" },
+      },
+      { type: "content_block_stop", index: 0 },
+      { type: "content_block_stop", index: 1 },
+      { type: "text_delta", text: "llo" },
+      { type: "message_stop" },
+    ]);
+  });
+
   it("replaceInOpenAIStream routes response events", async () => {
     const stream = fromArray([
       { type: "response.created", id: "a" },
