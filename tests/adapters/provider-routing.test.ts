@@ -1,0 +1,135 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  replaceInAnthropicStream,
+} from "@/adapters/anthropic";
+import {
+  replaceInOpenAIChatCompletionsStream,
+  replaceInOpenAIStream,
+} from "@/adapters/openai";
+import {
+  replaceInVercelStreamText,
+} from "@/adapters/vercel";
+import { collectAsync, fromArray } from "@tests/helpers";
+
+describe("provider wrappers", () => {
+  it("replaceInOpenAIChatCompletionsStream keeps parallel channels independent", async () => {
+    const stream = fromArray([
+      {
+        choices: [
+          { index: 0, delta: { content: "he" } },
+          { index: 1, delta: { content: "wo" } },
+        ],
+      },
+      {
+        choices: [
+          { index: 0, delta: { content: "llo" } },
+          { index: 1, delta: { content: "rld" } },
+        ],
+      },
+    ]);
+
+    const wrapped = replaceInOpenAIChatCompletionsStream(stream, [/hello/g, "hi"]);
+    const out = await collectAsync(wrapped);
+
+    expect(out).toEqual([
+      {
+        choices: [
+          { index: 0, delta: { content: "hi" } },
+          { index: 1, delta: { content: "wo" } },
+        ],
+      },
+      {
+        choices: [
+          { index: 0, delta: { content: "" } },
+          { index: 1, delta: { content: "rld" } },
+        ],
+      },
+    ]);
+  });
+
+  it("replaceInAnthropicStream throws for unknown first-event shape", async () => {
+    const stream = fromArray([{ unknown: true }]) as unknown as AsyncIterable<{
+      type: string;
+    }>;
+
+    await expect(
+      collectAsync(replaceInAnthropicStream(stream, [/x/g, "y"])),
+    ).rejects.toThrow("could not detect an Anthropic message stream");
+  });
+
+  it("replaceInOpenAIStream routes response events", async () => {
+    const stream = fromArray([
+      { type: "response.created", id: "a" },
+      {
+        type: "response.output_text.delta" as const,
+        output_index: 0,
+        delta: "he",
+      },
+      {
+        type: "response.output_text.delta" as const,
+        output_index: 0,
+        delta: "llo",
+      },
+    ]);
+
+    const wrapped = replaceInOpenAIStream(stream, [/hello/g, "hi"]);
+    const out = await collectAsync(wrapped);
+
+    expect(out).toEqual([
+      { type: "response.created", id: "a" },
+      {
+        type: "response.output_text.delta",
+        output_index: 0,
+        delta: "hi",
+      },
+      {
+        type: "response.output_text.delta",
+        output_index: 0,
+        delta: "",
+      },
+    ]);
+  });
+
+  it("replaceInOpenAIStream throws for unknown stream surfaces", async () => {
+    const stream = fromArray([{ unknown: true }]) as unknown as AsyncIterable<{
+      choices: Array<{ index: number; delta: { content?: string | null } }>;
+    }>;
+    const wrapped = replaceInOpenAIStream(stream, [/x/g, "y"]);
+
+    await expect(collectAsync(wrapped)).rejects.toThrow(
+      "could not infer stream surface",
+    );
+  });
+
+  it("replaceInVercelStreamText wraps both streams and preserves helper methods", async () => {
+    const textStream = fromArray(["ab", "cd"]);
+    const fullStream = fromArray([
+      { type: "text" as const, text: "ab" },
+      { type: "tool-call" as const, toolCallId: "1" },
+      { type: "text" as const, text: "cd" },
+    ]);
+
+    const wrapped = replaceInVercelStreamText(
+      {
+        textStream,
+        fullStream,
+        helper() {
+          return "ok";
+        },
+      },
+      [/abcd/g, "xy"],
+    );
+
+    const textOut = await collectAsync(wrapped.textStream);
+    const fullOut = await collectAsync(wrapped.fullStream);
+
+    expect(textOut).toEqual(["xy", ""]);
+    expect(fullOut).toEqual([
+      { type: "tool-call", toolCallId: "1" },
+      { type: "text", text: "xy" },
+      { type: "text", text: "" },
+    ]);
+    expect((wrapped as { helper: () => string }).helper()).toBe("ok");
+  });
+});
