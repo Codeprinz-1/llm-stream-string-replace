@@ -4,6 +4,7 @@
   "description": "Stream string replacement for LLM interfaces with provider-shape-preserving outputs. Supports Regex and string patterns.",
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
