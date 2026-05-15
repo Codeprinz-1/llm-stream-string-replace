@@ -48,14 +48,14 @@ describe("provider wrappers", () => {
     ]);
   });
 
-  it("replaceInAnthropicStream throws for unknown first-event shape", async () => {
+  it("replaceInAnthropicStream trusts caller-provided stream surface", async () => {
     const stream = fromArray([{ unknown: true }]) as unknown as AsyncIterable<{
       type: string;
     }>;
 
-    await expect(
-      collectAsync(replaceInAnthropicStream(stream, [/x/g, "y"])),
-    ).rejects.toThrow("could not detect an Anthropic message stream");
+    const out = await collectAsync(replaceInAnthropicStream(stream, [/x/g, "y"]));
+
+    expect(out).toEqual([{ unknown: true }]);
   });
 
   it("replaceInAnthropicStream keeps indexed blocks separate from flat text_delta lane", async () => {
