@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  replaceInAnthropicStream,
-} from "@/adapters/anthropic";
+import { replaceInAnthropicStream } from "@/adapters/anthropic";
 import {
   replaceInOpenAIChatCompletionsStream,
+  replaceInOpenAIResponsesStream,
   replaceInOpenAIStream,
 } from "@/adapters/openai";
-import {
-  replaceInVercelStreamText,
-} from "@/adapters/vercel";
+import { replaceInVercelStreamText } from "@/adapters/vercel";
 import { collectAsync, fromArray } from "@tests/helpers";
 
 describe("provider wrappers", () => {
@@ -29,7 +26,10 @@ describe("provider wrappers", () => {
       },
     ]);
 
-    const wrapped = replaceInOpenAIChatCompletionsStream(stream, [/hello/g, "hi"]);
+    const wrapped = replaceInOpenAIChatCompletionsStream(stream, [
+      /hello/g,
+      "hi",
+    ]);
     const out = await collectAsync(wrapped);
 
     expect(out).toEqual([
@@ -48,12 +48,110 @@ describe("provider wrappers", () => {
     ]);
   });
 
+  it("replaceInOpenAIChatCompletionsStream handles two sequential multi-choice messages with staggered lane endings", async () => {
+    const stream = fromArray([
+      // Message 1
+      {
+        choices: [
+          { index: 0, delta: { content: "he" }, finish_reason: null },
+          { index: 1, delta: { content: "go" }, finish_reason: null },
+          { index: 2, delta: { content: "fi" }, finish_reason: null },
+        ],
+      },
+      {
+        choices: [
+          { index: 0, delta: { content: "llo" }, finish_reason: "stop" },
+          { index: 1, delta: { content: "od" }, finish_reason: null },
+          { index: 2, delta: { content: "rst" }, finish_reason: "stop" },
+        ],
+      },
+      {
+        choices: [
+          { index: 1, delta: { content: "bye" }, finish_reason: "stop" },
+        ],
+      },
+      // Message 2 (same choice indexes reused after prior lanes ended)
+      {
+        choices: [
+          { index: 0, delta: { content: "he" }, finish_reason: null },
+          { index: 1, delta: { content: "go" }, finish_reason: null },
+          { index: 2, delta: { content: "sec" }, finish_reason: null },
+        ],
+      },
+      {
+        choices: [
+          { index: 2, delta: { content: "ond" }, finish_reason: "stop" },
+          { index: 1, delta: { content: "od" }, finish_reason: null },
+        ],
+      },
+      {
+        choices: [
+          { index: 0, delta: { content: "llo" }, finish_reason: "stop" },
+        ],
+      },
+      {
+        choices: [
+          { index: 1, delta: { content: "bye" }, finish_reason: "stop" },
+        ],
+      },
+    ]);
+
+    const wrapped = replaceInOpenAIChatCompletionsStream(stream, [
+      [/hello/g, "hullo"],
+      [/goodbye/g, "badbye!"],
+      [/first/g, "third"],
+      [/second/g, "fourth"],
+    ]);
+    const out = await collectAsync(wrapped);
+
+    expect(out).toEqual([
+      {
+        choices: [
+          { index: 0, delta: { content: "hullo" }, finish_reason: null },
+          { index: 1, delta: { content: "badbye!" }, finish_reason: null },
+          { index: 2, delta: { content: "third" }, finish_reason: null },
+        ],
+      },
+      {
+        choices: [
+          { index: 0, delta: { content: "" }, finish_reason: "stop" },
+          { index: 1, delta: { content: "" }, finish_reason: null },
+          { index: 2, delta: { content: "" }, finish_reason: "stop" },
+        ],
+      },
+      {
+        choices: [{ index: 1, delta: { content: "" }, finish_reason: "stop" }],
+      },
+      {
+        choices: [
+          { index: 0, delta: { content: "hullo" }, finish_reason: null },
+          { index: 1, delta: { content: "badbye!" }, finish_reason: null },
+          { index: 2, delta: { content: "fourth" }, finish_reason: null },
+        ],
+      },
+      {
+        choices: [
+          { index: 2, delta: { content: "" }, finish_reason: "stop" },
+          { index: 1, delta: { content: "" }, finish_reason: null },
+        ],
+      },
+      {
+        choices: [{ index: 0, delta: { content: "" }, finish_reason: "stop" }],
+      },
+      {
+        choices: [{ index: 1, delta: { content: "" }, finish_reason: "stop" }],
+      },
+    ]);
+  });
+
   it("replaceInAnthropicStream trusts caller-provided stream surface", async () => {
     const stream = fromArray([{ unknown: true }]) as unknown as AsyncIterable<{
       type: string;
     }>;
 
-    const out = await collectAsync(replaceInAnthropicStream(stream, [/x/g, "y"]));
+    const out = await collectAsync(
+      replaceInAnthropicStream(stream, [/x/g, "y"]),
+    );
 
     expect(out).toEqual([{ unknown: true }]);
   });
@@ -77,7 +175,9 @@ describe("provider wrappers", () => {
       { type: "message_stop" },
     ]);
 
-    const out = await collectAsync(replaceInAnthropicStream(stream, [/hello/g, "hi"]));
+    const out = await collectAsync(
+      replaceInAnthropicStream(stream, [/hello/g, "hi"]),
+    );
 
     expect(out).toEqual([
       { type: "message_start" },
