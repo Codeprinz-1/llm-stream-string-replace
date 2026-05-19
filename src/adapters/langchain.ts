@@ -13,14 +13,7 @@ interface LangChainChunkEndMarker {
 }
 
 export interface LangChainAIMessageChunk {
-  content:
-    | string
-    | Array<
-        | string
-        | LangChainTextContentPart
-        | { type: string; [key: string]: unknown }
-      >;
-  [key: string]: unknown;
+  content: string | Array<string | LangChainTextContentPart | { type: string }>;
 }
 
 function isTextObjectPart(part: unknown): part is LangChainTextContentPart {
