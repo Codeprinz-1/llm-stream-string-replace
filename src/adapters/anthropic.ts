@@ -2,33 +2,31 @@ import { applyRules } from "@/core/compose";
 import type { ChannelReplacerOptions, Rules, TextAccess } from "@/core/types";
 import { assertAsyncIterable } from "@/adapters/type-guards";
 
-export type AnthropicDelta = {
-  type: string;
-  text?: string;
-  [key: string]: unknown;
-};
-
 export type AnthropicMessageEvent = {
   type: string;
   index?: number;
-  delta?: AnthropicDelta;
+  delta?: unknown;
   text?: string;
-  [key: string]: unknown;
 };
 
 export type AnthropicMessageStream = AsyncIterable<AnthropicMessageEvent>;
 
 const FLAT_TEXT_DELTA_CHANNEL_KEY = "anthropic:message-text-delta";
 
+function getAnthropicDeltaText(event: AnthropicMessageEvent): string | null {
+  if (!event.delta || typeof event.delta !== "object") {
+    return null;
+  }
+
+  const maybe = event.delta as { text?: unknown };
+  return typeof maybe.text === "string" ? maybe.text : null;
+}
+
 function accessForAnthropicStream(): TextAccess<AnthropicMessageEvent> {
   return {
     getText(event): string | null {
-      if (
-        event.type === "content_block_delta" &&
-        event.delta != null &&
-        typeof event.delta.text === "string"
-      ) {
-        return event.delta.text;
+      if (event.type === "content_block_delta") {
+        return getAnthropicDeltaText(event);
       }
       if (event.type === "text_delta" && typeof event.text === "string") {
         return event.text;
@@ -37,7 +35,11 @@ function accessForAnthropicStream(): TextAccess<AnthropicMessageEvent> {
     },
     setText(event, text): AnthropicMessageEvent {
       if (event.type === "content_block_delta" && event.delta != null) {
-        return { ...event, delta: { ...event.delta, text } };
+        const deltaObject =
+          typeof event.delta === "object"
+            ? (event.delta as Record<string, unknown>)
+            : {};
+        return { ...event, delta: { ...deltaObject, text } };
       }
       if (event.type === "text_delta") {
         return { ...event, text };
@@ -58,7 +60,9 @@ function accessForAnthropicStream(): TextAccess<AnthropicMessageEvent> {
     isChannelEnd(event): boolean {
       // content_block_stop ends indexed blocks (guaranteed by Anthropic protocol)
       // message_stop ends flat text_delta lane (no indexed content blocks after it)
-      return event.type === "content_block_stop" || event.type === "message_stop";
+      return (
+        event.type === "content_block_stop" || event.type === "message_stop"
+      );
     },
   };
 }
@@ -73,10 +77,5 @@ export function replaceInAnthropicStream<
   TStream extends AnthropicMessageStream,
 >(stream: TStream, rules: Rules, options?: ChannelReplacerOptions): TStream {
   assertAsyncIterable(stream, "replaceInAnthropicStream");
-  return applyRules(
-    stream,
-    rules,
-    accessForAnthropicStream(),
-    options,
-  );
+  return applyRules(stream, rules, accessForAnthropicStream(), options);
 }
