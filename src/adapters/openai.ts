@@ -9,16 +9,14 @@ import {
 
 export interface OpenAIChatCompletionChunkChoice {
   index: number;
+  finish_reason?: string | null;
   delta: {
     content?: string | null;
-    [key: string]: unknown;
   };
-  [key: string]: unknown;
 }
 
 export interface OpenAIChatCompletionChunk {
   choices: OpenAIChatCompletionChunkChoice[];
-  [key: string]: unknown;
 }
 
 export interface OpenAIResponseTextDeltaEvent {
@@ -26,14 +24,12 @@ export interface OpenAIResponseTextDeltaEvent {
   output_index?: number;
   item_id?: string;
   delta: string;
-  [key: string]: unknown;
 }
 
 export type OpenAIResponseStreamEvent =
   | OpenAIResponseTextDeltaEvent
   | {
       type: string;
-      [key: string]: unknown;
     };
 
 export type OpenAIChunkStream = AsyncIterable<OpenAIChatCompletionChunk>;
@@ -270,29 +266,29 @@ export function replaceInOpenAIResponsesStream<T extends OpenAIResponseStream>(
   return applyRules(stream, rules, responseAccess(), options);
 }
 
-export function replaceInOpenAIStream(
-  stream: OpenAIChatCompletionStream,
-  rules: Rules,
-  options?: ChannelReplacerOptions,
-): OpenAIChatCompletionStream;
-export function replaceInOpenAIStream(
-  stream: OpenAIChunkStream,
-  rules: Rules,
-  options?: ChannelReplacerOptions,
-): OpenAIChunkStream;
-export function replaceInOpenAIStream(
-  stream: OpenAIResponseStream,
-  rules: Rules,
-  options?: ChannelReplacerOptions,
-): OpenAIResponseStream;
-export function replaceInOpenAIStream<T extends AsyncIterable<unknown>>(
+export function replaceInOpenAIStream<T extends OpenAIChatCompletionStream>(
   stream: T,
   rules: Rules,
   options?: ChannelReplacerOptions,
-): T {
+): T;
+export function replaceInOpenAIStream<T extends OpenAIChunkStream>(
+  stream: T,
+  rules: Rules,
+  options?: ChannelReplacerOptions,
+): T;
+export function replaceInOpenAIStream<T extends OpenAIResponseStream>(
+  stream: T,
+  rules: Rules,
+  options?: ChannelReplacerOptions,
+): T;
+export function replaceInOpenAIStream<
+  T extends OpenAIChunkStream | OpenAIResponseStream,
+>(stream: T, rules: Rules, options?: ChannelReplacerOptions): T {
   assertAsyncIterable(stream, "replaceInOpenAIStream");
 
-  async function* routed(): AsyncGenerator<unknown> {
+  async function* routed(): AsyncGenerator<
+    OpenAIChatCompletionChunk | OpenAIResponseStreamEvent
+  > {
     const iterator = stream[Symbol.asyncIterator]();
     const first = await iterator.next();
 
