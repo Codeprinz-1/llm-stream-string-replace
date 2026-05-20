@@ -1,7 +1,26 @@
 {
   "name": "llm-stream-string-replace",
   "version": "0.1.0",
-  "description": "Stream string replacement for LLM interfaces with provider-shape-preserving outputs. Supports Regex and string patterns.",
+  "description": "Stream string replacement for LLM interfaces and object streams with provider-shape-preserving outputs. Supports Regex and string patterns.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Codeprinz-1/llm-stream-string-replace.git"
+  },
+  "homepage": "https://github.com/Codeprinz-1/llm-stream-string-replace",
+  "keywords": [
+    "llm",
+    "stream",
+    "string",
+    "replace",
+    "string replace",
+    "openai",
+    "anthropic",
+    "langchain",
+    "vercel",
+    "adapter",
+    "typescript",
+    "ai"
+  ],
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
