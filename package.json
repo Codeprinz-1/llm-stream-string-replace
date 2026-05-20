@@ -1,6 +1,6 @@
 {
   "name": "llm-stream-string-replace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stream string replacement for LLM interfaces and object streams with provider-shape-preserving outputs. Supports Regex and string patterns.",
   "repository": {
     "type": "git",
