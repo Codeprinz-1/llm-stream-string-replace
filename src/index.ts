@@ -9,15 +9,16 @@ export type {
 export { applyRules } from "@/core/compose";
 export { ChannelReplacer } from "@/core/channel-replacer";
 
-export { replaceInAsyncIterable, replaceInStringIterable } from "@/adapters/generic";
+export {
+  replaceInAsyncIterable,
+  replaceInStringIterable,
+} from "@/adapters/generic";
 export {
   replaceInOpenAIStream,
   replaceInOpenAIChatCompletionsStream,
   replaceInOpenAIResponsesStream,
 } from "@/adapters/openai";
-export {
-  replaceInAnthropicStream,
-} from "@/adapters/anthropic";
+export { replaceInAnthropicStream } from "@/adapters/anthropic";
 export {
   replaceInVercelStreamText,
   replaceInVercelTextStream,

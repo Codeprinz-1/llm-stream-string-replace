@@ -21,14 +21,16 @@ export function applyMatchToSegments<TEvent>(
     }
 
     const isAfterMatch = segmentStart >= matchEnd;
-    const fullyContainsMatch = segmentStart <= matchStart && segmentEnd >= matchEnd;
+    const fullyContainsMatch =
+      segmentStart <= matchStart && segmentEnd >= matchEnd;
     if (isAfterMatch || fullyContainsMatch) {
       segment.expectedOutputEnd += delta;
       continue;
     }
 
     const endsInsideMatch = segmentStart <= matchStart && segmentEnd < matchEnd;
-    const fullyInsideMatch = segmentStart > matchStart && segmentEnd <= matchEnd;
+    const fullyInsideMatch =
+      segmentStart > matchStart && segmentEnd <= matchEnd;
     if (endsInsideMatch || fullyInsideMatch) {
       segment.expectedOutputEnd = outputPosAtMatchStart + match.newLen;
       continue;

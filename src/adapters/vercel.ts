@@ -1,9 +1,6 @@
 import { applyRules } from "@/core/compose";
 import type { ChannelReplacerOptions, Rules, TextAccess } from "@/core/types";
-import {
-  assertAsyncIterable,
-  isAsyncIterable,
-} from "@/adapters/type-guards";
+import { assertAsyncIterable, isAsyncIterable } from "@/adapters/type-guards";
 
 export type VercelTextStream = AsyncIterable<string>;
 
@@ -64,20 +61,13 @@ function fullStreamAccess(): TextAccess<VercelFullStreamPart> {
 /**
  * Wraps only the Vercel textStream (AsyncIterable<string>) portion.
  */
-export function replaceInVercelTextStream<
-  T extends VercelTextStream,
->(
+export function replaceInVercelTextStream<T extends VercelTextStream>(
   textStream: T,
   rules: Rules,
   options?: ChannelReplacerOptions,
 ): T {
   assertAsyncIterable(textStream, "replaceInVercelTextStream");
-  return applyRules(
-    textStream,
-    rules,
-    textStreamAccess(),
-    options,
-  );
+  return applyRules(textStream, rules, textStreamAccess(), options);
 }
 
 /**
@@ -86,18 +76,9 @@ export function replaceInVercelTextStream<
  */
 export function replaceInVercelFullStream<
   T extends AsyncIterable<VercelFullStreamPart>,
->(
-  fullStream: T,
-  rules: Rules,
-  options?: ChannelReplacerOptions,
-): T {
+>(fullStream: T, rules: Rules, options?: ChannelReplacerOptions): T {
   assertAsyncIterable(fullStream, "replaceInVercelFullStream");
-  return applyRules(
-    fullStream,
-    rules,
-    fullStreamAccess(),
-    options,
-  );
+  return applyRules(fullStream, rules, fullStreamAccess(), options);
 }
 
 /**

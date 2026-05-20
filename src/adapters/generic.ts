@@ -2,9 +2,7 @@ import { applyRules } from "@/core/compose";
 import type { ChannelReplacerOptions, Rules, TextAccess } from "@/core/types";
 import { assertAsyncIterable } from "@/adapters/type-guards";
 
-export function replaceInStringIterable<
-  T extends AsyncIterable<string>,
->(
+export function replaceInStringIterable<T extends AsyncIterable<string>>(
   stream: T,
   rules: Rules,
   options?: ChannelReplacerOptions,

@@ -1,11 +1,7 @@
 import ReplaceStreamFactory from "replacestream";
 
 import { applyMatchToSegments } from "@/core/match-journal";
-import type {
-  ChannelReplacerOptions,
-  Rule,
-  Segment,
-} from "@/core/types";
+import type { ChannelReplacerOptions, Rule, Segment } from "@/core/types";
 
 function escapeForRegex(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -69,7 +65,10 @@ export class ChannelReplacer<TEvent> {
     this.setText = setText;
     this.encoding = resolvedOptions.encoding ?? "utf8";
 
-    const replacementFn = (match: string, ...args: Array<string | number>): string => {
+    const replacementFn = (
+      match: string,
+      ...args: Array<string | number>
+    ): string => {
       const offset = args[args.length - 2] as number;
       const input = args[args.length - 1] as string;
       const captures = args
