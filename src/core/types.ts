@@ -11,11 +11,34 @@ export type Rule = [pattern: string | RegExp, replacement: string | ReplaceFn];
 
 export type Rules = Rule | Rule[];
 
-export interface ChannelReplacerOptions extends Omit<
-  ReplaceStreamFactory.Options,
-  "encoding"
-> {
+export interface ChannelReplacerOptions {
+  /**
+   * Sets a limit on the number of times the replacement will be made. This
+   * is forced to one when a regex without the global flag is provided.
+   *
+   * Default: `Infinity`
+   */
+  limit?: number;
+  /**
+   * The text encoding used during search and replace.
+   *
+   * Default: `"utf8"`
+   */
   encoding?: BufferEncoding;
+  /**
+   * When doing cross-chunk replacing, this sets the maximum length match
+   * that will be supported.
+   *
+   * Default: `100`
+   */
+  maxMatchLen?: number;
+  /**
+   * When doing string match (not relevant for regex matching) whether to do a
+   * case insensitive search.
+   *
+   * Default: `true`
+   */
+  ignoreCase?: boolean;
 }
 
 export interface Segment<TEvent> {

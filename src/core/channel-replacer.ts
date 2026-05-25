@@ -15,8 +15,7 @@ function normalizePattern(
     return pattern;
   }
 
-  const flags =
-    options.regExpOptions ?? (options.ignoreCase === false ? "gm" : "gmi");
+  const flags = options.ignoreCase === false ? "gm" : "gmi";
 
   // Keep string-search semantics while ensuring replacement callback receives
   // (match, p1, offset, input) compatible metadata.
